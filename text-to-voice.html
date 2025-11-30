@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Texto a Voz - Herramienta Online</title>
+  <!-- Bootstrap 4.4.1 CSS -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+    crossorigin="anonymous"
+  />
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Convertidor de Texto a Voz</h2>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label for="textInput">Texto a leer:</label>
+          <textarea
+            id="textInput"
+            class="form-control"
+            rows="5"
+            placeholder="Escribe aquí el texto que deseas convertir a voz..."
+          >Hola, bienvenido a la herramienta de texto a voz.</textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="voiceSelect">Voz:</label>
+            <select id="voiceSelect" class="form-control"></select>
+          </div>
+
+          <div class="form-group col-md-2">
+            <label for="rate">Velocidad (0.5 - 2.0)</label>
+            <input
+              type="range"
+              id="rate"
+              class="form-control-range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
+            />
+            <small class="form-text text-muted" id="rateValue">1</small>
+          </div>
+          
+          <div class="form-group col-md-2">
+            <label for="pitch">Tono (0 - 2)</label>
+            <input
+              type="range"
+              id="pitch"
+              class="form-control-range"
+              min="0"
+              max="2"
+              step="0.1"
+              value="1"
+            />
+            <small class="form-text text-muted" id="pitchValue">1</small>
+          </div>
+
+          <div class="form-group col-md-2">
+            <label for="volume">Volumen (0 - 1)</label>
+            <input
+              type="range"
+              id="volume"
+              class="form-control-range"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+            />
+            <small class="form-text text-muted" id="volumeValue">1</small>
+          </div>
+        </div>
+
+        <div class="text-center">
+          <button id="speakBtn" class="btn btn-primary mr-2">Hablar</button>
+          <button id="stopBtn" class="btn btn-secondary">Detener</button>
+        </div>
+        
+        <div class="mt-4 alert alert-info">
+        <h5>¿Quieres más voces?</h5>
+        <p>La calidad y variedad de voces depende de tu sistema operativo. Aquí puedes instalar voces adicionales:</p>
+        <ul>
+          <li><strong>Windows:</strong> Ve a <code>Configuración → Hora e idioma → Idioma</code>, agrega un nuevo idioma y luego instala su paquete de "Voz".</li>
+          <li><strong>macOS:</strong> Las voces avanzadas se instalan automáticamente al seleccionarlas en <code>Preferencias del Sistema → Accesibilidad → Voz</code>.</li>
+          <li><strong>Linux (Ubuntu/Debian):</strong> Instala voces con: <code>sudo apt install espeak mbrola mbrola-es1</code> o <code>festival</code>.</li>
+        </ul>
+        <p>Más información: 
+          <a href="https://support.microsoft.com/es-es/windows/cambiar-la-voz-de-narrador-en-windows-10-8e3a6c24-3c1f-4a4c-8ce3-9f4c4a3f9b72" target="_blank" rel="noopener">Windows (Microsoft)</a> | 
+          <a href="https://support.apple.com/es-es/guide/mac-help/mh27448/mac" target="_blank" rel="noopener">macOS (Apple)</a>
+        </p>
+      </div>
+        
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 4.4.1 JS (opcional, solo si usas componentes JS) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-6U7Zz5Qh0J8fZ1qjvKj2Gf6k5Kf9f6f8Kjy5Kj8Kf6k5Kf9f6f8Kj8Kf6k5Kf9f6f8Kj"
+    crossorigin="anonymous"
+  ></script>
+
+  <script>
+    // Elementos del DOM
+    const textInput = document.getElementById('textInput');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateInput = document.getElementById('rate');
+    const volumeInput = document.getElementById('volume');
+    const speakBtn = document.getElementById('speakBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const rateValue = document.getElementById('rateValue');
+    const volumeValue = document.getElementById('volumeValue');
+    const pitchInput = document.getElementById('pitch');
+    const pitchValue = document.getElementById('pitchValue');
+
+    let voices = [];
+
+    // Cargar voces disponibles
+    function loadVoices() {
+      voices = speechSynthesis.getVoices();
+      voiceSelect.innerHTML = '';
+      voices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.textContent = `${voice.name} (${voice.lang})`;
+        option.setAttribute('data-voice-index', index);
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    // Inicialmente cargar voces (en algunos navegadores se necesita un evento)
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    loadVoices(); // Intentar cargar inmediatamente
+
+    // Actualizar valores mostrados
+    rateInput.addEventListener('input', () => rateValue.textContent = rateInput.value);
+    volumeInput.addEventListener('input', () => volumeValue.textContent = volumeInput.value);
+    pitchInput.addEventListener('input', () => pitchValue.textContent = pitchInput.value);
+
+    // Hablar
+    speakBtn.addEventListener('click', () => {
+      if (speechSynthesis.speaking) speechSynthesis.cancel();
+
+      const text = textInput.value.trim();
+      if (!text) return;
+
+      const msg = new SpeechSynthesisUtterance(text);
+      const selectedVoiceIndex = voiceSelect.selectedOptions[0]?.getAttribute('data-voice-index');
+      if (selectedVoiceIndex !== null) {
+        msg.voice = voices[selectedVoiceIndex];
+      }
+      msg.rate = parseFloat(rateInput.value);
+      msg.volume = parseFloat(volumeInput.value);
+      msg.pitch = parseFloat(pitchInput.value);
+
+      speechSynthesis.speak(msg);
+    });
+
+    // Detener
+    stopBtn.addEventListener('click', () => {
+      speechSynthesis.cancel();
+    });
+  </script>
+</body>
+</html>
